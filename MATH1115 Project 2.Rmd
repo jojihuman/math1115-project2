@@ -1,0 +1,280 @@
+---
+title: "Project 2 - Australian Flight Data"
+author: "George Wu (500497375)"
+date: "University of Sydney | MATH1115 | October 2021"
+output: 
+  html_document:
+    code_folding: hide  # don't change this
+    code_download: true # embed .Rmd file
+    toc: true  # table of contents
+    toc_depth: 3
+    toc_float: true # toc is always visible when scrolled
+    number_section: true # add section numbers to headings
+    theme:
+      bootswatch: "simplex" # check https://bootswatch.com/ 
+      base_font:
+        google: Prompt # select any Google Font
+      heading_font:
+        google: Proza Libre # select any Google Font
+---
+
+```{r setup, include=FALSE}
+if (requireNamespace("thematic")) 
+  thematic::thematic_rmd(font = "auto")
+```
+
+# Executive Summary
+
+The aim of this report is to provide information to Flight Centre on popular destinations and airlines. This gives airlines more information on where people are travelling and helps provide data to them so that they can focus on finding new potential areas of the world to focus on. 
+
+Our recommendations are that Flight Centre should push harder on international airlines such as Air New Zealand, Emirates, and Singapore Airlines, as well as the Australian airlines of Qantas and Jetstar. Another recommendation is that the the Chinese market gets additional attention and Chinese airline routes should be advertised more. 
+
+# Initial Data Analysis (IDA)
+
+Source data: https://data.gov.au/dataset/ds-dga-e82787e4-a480-4189-b963-1d0b6088103e/details
+
+Data is sourced from the Australian Government's Bureau of Infrastructure, Transport and Regional Economics.
+
+The stakeholder/client that we are interested in communicating this data to is Flight Centre, an Australian travel agency. It is important that they understand the passenger data in order for them to understand how many people fly routes to/from Australia. This is important so that they can look at the popular destinations and the popular airlines so that they can plan special offers for routes and airlines.
+
+Data was given to us immediately by the teaching staff for us to use. I cleaned the data by filtering for the flight data given to us in the last 6 years (2015-2021), as I felt that data before 2015 was outdated. Reasons for this include excluding data that included defunct airlines and air routes, as well as maintaining focus on recent times so that there's a better and more refined understanding of what is going on in the travel industry.
+
+```{r, fig.height = 10}
+library(tidyverse)
+#read the CSV file
+flights = read.csv("international_airline_activity_opfltsseats_cleaned.csv")
+#analyse the CSV file's feathers
+dim(flights)
+names(flights)
+str(flights)
+head(flights)
+```
+
+# Data analysis and exploration
+
+## Research Question 1 (a): Which airlines are the most popular among passengers?
+```{r, message=FALSE, fig.height = 10, results = FALSE}
+library(tidyverse)
+flights %>%
+  #create ggplot object and create ordered bar graph
+  ggplot(aes(Max_Seats, reorder(Airline, Max_Seats, sum), fill = Airline)) + 
+  geom_bar(stat = "identity") + 
+  #titles and legends
+  xlab("Amount of Seats") + 
+  ylab("Airlines") + 
+  ggtitle("Airlines flown amongst passengers in Australia (2015-2021)") + 
+  theme(legend.position = "bottom")
+```
+
+
+Observation: Qantas is the most flown airline, followed by Emirates, Singapore Airlines, Jetstar and Air New Zealand. 
+
+Article: https://www.finder.com.au/which-are-the-most-popular-international-airlines-in-australia
+
+An article written by Finder's Angus Kidman had slightly different results, with Jetstar as the 3rd most flown airline and Air New Zealand as the 6th most flown airline, with Virgin Australia coming in 5th place. While the ranks are mostly the same with the data sourced from the Australian Government, the most likely explaination for the changes in data could come to recent times with COVID-19 and Virgin Australia's administration in 2020, which would impact their ranking, as the New Zealand bubble gave more seats to Air New Zealand, and Virgin Australia's domestic flights' passengers going to Jetstar and/or Qantas. 
+
+Article explaining Virgin Australia's administration: https://www.bbc.com/news/business-54549609#:~:text=Virgin%20Australia%20went%20into%20voluntary,to%20the%20Covid%2D19%20pandemic.
+
+## Research Question 1 (b): Which countries and regions are flown the most to?
+```{r, message=FALSE, fig.height = 10, results = FALSE}
+library(tidyverse)
+flights %>%
+  #filter data for outbound flights
+  filter(In_Out == "O") %>%
+  #create ggplot object and create ordered bar graph
+  ggplot(aes(Max_Seats, reorder(Service_Country, Max_Seats, sum), fill = Service_Country)) + 
+  geom_bar(stat = "identity") + 
+  #titles and legends
+  xlab("Amount of Seats") + 
+  ylab("Countries") + 
+  ggtitle("Most popular countries that have been travelled to (2015-2021)") + 
+  theme(plot.title = element_text(hjust = 0))
+```
+
+Observation: New Zealand is the most popular country to travel to, followed by Singapore, UAE, USA and China. 
+
+Article: https://www.budgetdirect.com.au/travel-insurance/research/tourism-statistics.html#:~:text=New%20Zealand%20was%20the%20leading,1.4%20million%20trips%20in%202019.
+
+Insurance company Budget Direct ran an article which looks at Australian tourism statistics, in which their top 5 list comprised of New Zealand, Indonesia, USA, UK and China. It is interesting to note that Singapore was not a top destination in Budget Direct's article, whilst Singapore came second and Indonesia came sixth. 
+
+## Research Question 1 (c): Is there a relationship between the Total Amount of Flights and Max Seats?
+
+As there are too many airlines to consider when looking at the data, we will consider only the top 4 airlines. The top 4 airlines can be seen in the graph from Research Question 1 (a). 
+```{r, fig.height=20, fig.width= 10, results=FALSE}
+library(tidyverse)
+qantas <-
+  flights %>%
+  #filter for specific airlines
+    filter(Airline == "Qantas Airways") %>%
+    ggplot(aes(All_Flights, Max_Seats)) + 
+  #choose colour that correlates best to airline livery
+    geom_point(colour = "#FC0000") + 
+    geom_smooth(method = "lm", colour = "#FC0000") +
+  #titles and legends
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for Qantas")
+
+emirates <-
+  flights %>%
+    filter(Airline == "Emirates") %>%
+    ggplot(aes(All_Flights, Max_Seats, colour = Airline)) + 
+    geom_point(colour = "#006400") + 
+    geom_smooth(method = "lm", colour = "#006400") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for Emirates")
+
+jetstar <-
+  flights %>%
+    filter(Airline == "Jetstar") %>%
+    ggplot(aes(All_Flights, Max_Seats, colour = Airline)) + 
+    geom_point(colour = "#FFA500") + 
+    geom_smooth(method = "lm", colour = "#FFA500") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for Jetstar")
+
+singapore_airlines <-
+  flights %>%
+    filter(Airline == "Singapore Airlines") %>%
+    ggplot(aes(All_Flights, Max_Seats, colour = Airline)) + 
+    geom_point(colour = "#00008b") + 
+    geom_smooth(method = "lm", colour = "#00008b") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for Singapore Airlines")
+
+qantas
+emirates
+jetstar
+singapore_airlines
+```
+
+Given that China also appeared as a top destination that is flown by passengers entering/leaving Australia, it is important that the Chinese airlines' relationship with their total flights and amount of seats be analysed as well. 
+
+```{r, fig.height=20, fig.width= 10, results=FALSE}
+library(tidyverse)
+
+china_southern <-
+  flights %>%
+    filter(Airline == "China Southern Airlines") %>%
+    ggplot(aes(All_Flights, Max_Seats)) + 
+    geom_point(colour = "#29b6f6") + 
+    geom_smooth(method = "lm", colour = "#29b6f6") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for China Southern Airlines")
+
+china_eastern <-
+  flights %>%
+    filter(Airline == "China Eastern Airlines") %>%
+    ggplot(aes(All_Flights, Max_Seats, colour = Airline)) + 
+    geom_point(colour = "#8b0000") +
+    geom_smooth(method = "lm", colour = "#8b0000") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for China Eastern Airlines")
+
+air_china <-
+  flights %>%
+    filter(Airline == "Air China") %>%
+    ggplot(aes(All_Flights, Max_Seats, colour = Airline)) + 
+    geom_point(colour = "#000000") + 
+    geom_smooth(method = "lm", colour = "#000000") +
+    theme_bw() +
+    xlab("All Flights") + 
+    ylab("Max Seats") + 
+    ggtitle("Relationship between Total Amount of Flights\nand the Maximum Amount of seats for Air China")
+
+china_southern
+china_eastern
+air_china
+```
+
+```{r}
+# Regression test
+qantas_data <-
+  flights %>%
+  filter(Airline == "Qantas Airways")
+
+lm(All_Flights ~ Max_Seats, data = qantas_data)
+summary(lm(All_Flights ~ Max_Seats, data = qantas_data))
+```
+
+```{r}
+emirates_data <-
+  flights %>%
+  filter(Airline == "Emirates")
+lm(All_Flights ~ Max_Seats, data = emirates_data)
+summary(lm(All_Flights ~ Max_Seats, data = emirates_data))
+```
+
+```{r}
+jetstar_data <-
+  flights %>%
+  filter(Airline == "Jetstar")
+lm(All_Flights ~ Max_Seats, data = jetstar_data)
+summary(lm(All_Flights ~ Max_Seats, data = jetstar_data))
+```
+
+```{r}
+singapore_data <-
+  flights %>%
+  filter(Airline == "Singapore Airlines")
+lm(All_Flights ~ Max_Seats, data = singapore_data)
+summary(lm(All_Flights ~ Max_Seats, data = singapore_data))
+```
+```{r}
+china_southern_data <-
+  flights %>%
+  filter(Airline == "China Southern Airlines")
+lm(All_Flights ~ Max_Seats, data = china_southern_data)
+summary(lm(All_Flights ~ Max_Seats, data = china_southern_data))
+```
+
+```{r}
+china_eastern_data <-
+  flights %>%
+  filter(Airline == "China Eastern Airlines")
+lm(All_Flights ~ Max_Seats, data = china_eastern_data)
+summary(lm(All_Flights ~ Max_Seats, data = china_eastern_data))
+```
+
+```{r}
+air_china_data <-
+  flights %>%
+  filter(Airline == "Air China")
+lm(All_Flights ~ Max_Seats, data = air_china_data)
+summary(lm(All_Flights ~ Max_Seats, data = air_china_data))
+```
+
+From what we are able to see with the linear regression tests, we see that the R^2^ values range from 0.67 to 0.98, and all the p-values are less than 0.01, which represent an overall significant linear relationship.
+
+However as these are only a few airlines, we would like to see the overall picture for all airlines. A t-test can give us the p-value for all airlines to test our hypothesis. 
+
+```{r}
+library(MASS)
+```
+
+**Hypotheses:**
+
+- $H_0$: A relationship between the total amount of flights and max seats does not exist.
+- $H_1$: A relationship between the total amount of flights and max seats exists.
+
+```{r}
+t.test(flights$All_Flights, flights$Max_Seats, var.equal = TRUE)
+```
+
+The test statistic is -216.59 and the p-value is < 0.001. From a 0.05 level of significance, the null hypothesis is rejected and thus we can **conclude** and **support** the regression tests above that there exists a relationship between the total amount of flights and the max amount of seats. 
+
+# References
+Kidman, A. (2016, June 1) Which are the most popular international airlines in Australia?. Finder. https://www.finder.com.au/which-are-the-most-popular-international-airlines-in-australia
+
+Australian Tourism Statistics 2020. Budget Direct. https://www.budgetdirect.com.au/travel-insurance/research/tourism-statistics.html#:~:text=New%20Zealand%20was%20the%20leading,1.4%20million%20trips%20in%202019.
