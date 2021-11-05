@@ -12,6 +12,7 @@ Submit a .html produced from a .Rmd.
 **Part 2: Presentation with Live Interrogation** 
 
 Present a 2 minute (maximum) report. This is the '2 minute challenge', a super important skill to learn (i.e. you need to develop the skill of talking concisvely and persuasively).  
+
 Design your 2 minute talk for your chosen stakeholder.
 Practise your presentation at home with a timer. It should not feel rushed, rather it should be at a nice, measured professional speed. 
 This can be done through a video presentation and shared or live on Zoom during lab time.
